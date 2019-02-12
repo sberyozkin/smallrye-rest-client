@@ -28,10 +28,6 @@ class DefaultResponseExceptionMapper implements ResponseExceptionMapper {
 
     @Override
     public Throwable toThrowable(Response response) {
-        try {
-            response.bufferEntity();
-        } catch (Exception ignored) {}
-        response.close();
         return new WebApplicationException("Unknown error, status code " + response.getStatus(), response);
     }
 

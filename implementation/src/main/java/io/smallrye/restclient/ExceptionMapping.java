@@ -17,6 +17,7 @@ package io.smallrye.restclient;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -26,6 +27,7 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
@@ -41,7 +43,9 @@ class ExceptionMapping implements ClientResponseFilter {
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
 
-        Response response = new PartialResponse(responseContext);
+        ResponseBuilder builder = Response.status(responseContext.getStatus()).entity(responseContext.getEntityStream());
+        copyHeaders(builder, responseContext);
+        Response response = builder.build();
 
         Map<ResponseExceptionMapper, Integer> mappers = new HashMap<>();
         for (Object o : instances) {
@@ -87,5 +91,14 @@ class ExceptionMapping implements ClientResponseFilter {
 
     }
 
-    private Set<Object> instances;
+    private void copyHeaders(ResponseBuilder builder, ClientResponseContext responseContext) {
+		for (Map.Entry<String, List<String>> entry : responseContext.getHeaders().entrySet()) {
+			for (String headerValue : entry.getValue()) {
+				builder.header(entry.getKey(), headerValue);
+			}	
+		}
+		
+	}
+
+	private Set<Object> instances;
 }
